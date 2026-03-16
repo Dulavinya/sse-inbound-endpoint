@@ -1,0 +1,10 @@
+<inboundEndpoint xmlns="http://ws.apache.org/ns/synapse"
+                 name="MCPSSEServerEndpoint"
+                 class="org.wso2.carbon.inbound.SSE.SSEMessageConsumerHTTP"
+                 suspend="false">
+    <parameters>
+        <parameter name="inbound.http.port">8765</parameter>
+        <parameter name="inbound.http.context.path">/mcp</parameter>
+        <parameter name="mcp.tools.localentry">mcpSseEntry</parameter>
+    </parameters>
+</inboundEndpoint>

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+ *  Copyright (c) 2025, WSO2 LLC. (https://www.wso2.com).
+ *
+ *  WSO2 LLC. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.wso2.integration.inbound</groupId>
+  <artifactId>mi-sse</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>WSO2 MI SSE Inbound Endpoint</name>
+  <description>Server-Sent Events (SSE) Inbound Endpoint for WSO2 Micro Integrator</description>
+  <url>http://wso2.org</url>
+
+  <properties>
+    <!-- Java Version -->
+    <java.version>1.8</java.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <micro.integrator.version>4.5.0</micro.integrator.version>
+
+    <!-- Plugin Versions -->
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+  </properties>
+
+  <dependencies>
+    <!-- WSO2 Carbon Mediation - Inbound Endpoint Framework -->
+    <dependency>
+      <groupId>org.wso2.ei</groupId>
+      <artifactId>org.wso2.micro.integrator.inbound.endpoint</artifactId>
+      <version>${micro.integrator.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Axis2 - MessageContext, Transport Layer -->
+    <dependency>
+      <groupId>org.apache.axis2</groupId>
+      <artifactId>axis2-kernel</artifactId>
+      <version>1.6.4</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JSON Processing - For MCP JSON-RPC parsing -->
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20231013</version>
+    </dependency>
+
+    <!-- Apache Synapse Core - For SynapseConfiguration access -->
+    <dependency>
+      <groupId>org.apache.synapse</groupId>
+      <artifactId>synapse-core</artifactId>
+      <version>4.1.0-wso2v15</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Commons Logging -->
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Maven Compiler Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+
+      <!-- Maven JAR Plugin - Build JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Bundle-Name>${project.artifactId}</Bundle-Name>
+              <Bundle-Version>${project.version}</Bundle-Version>
+              <Bundle-Description>${project.description}</Bundle-Description>
+              <Export-Package>org.wso2.carbon.inbound.SSE</Export-Package>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <!-- Maven Dependency Plugin - Copy dependencies -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/libs</outputDirectory>
+              <includeScope>runtime</includeScope>
+              <excludeScope>provided</excludeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Maven Dependency Plugin - Copy dependencies to lib folder -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/libs</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Maven JAR Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>org.wso2.carbon.inbound.SSE.MCPHandler</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>wso2-nexus</id>
+      <name>WSO2 Nexus Repository</name>
+      <url>https://maven.wso2.org/nexus/content/groups/wso2-public/</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>ignore</checksumPolicy>
+      </releases>
+    </repository>
+    <repository>
+      <id>central</id>
+      <name>Maven Central Repository</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+  </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>nexus-releases</id>
+      <name>WSO2 Release Distribution Repository</name>
+      <url>https://maven.wso2.org/nexus/content/repositories/releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus-snapshots</id>
+      <name>WSO2 Snapshot Distribution Repository</name>
+      <url>https://maven.wso2.org/nexus/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+</project>

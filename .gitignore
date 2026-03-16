@@ -1,0 +1,21 @@
+# Build output
+target/
+*.class
+*.jar
+*.war
+
+# IDE - IntelliJ
+.idea/
+*.iml
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test reports
+*.log

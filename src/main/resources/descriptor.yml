@@ -1,0 +1,35 @@
+
+# Dependencies for WSO2 MI MCP Server
+
+name: "MCP SSE Inbound Endpoint"
+version: "1.0.0"
+description: "Server-Sent Events (SSE) based inbound endpoint for MCP (Model Context Protocol) server integration with WSO2 Micro Integrator"
+
+dependencies:
+  - groupId: "org.wso2.carbon.mediation"
+    artifactId: "org.wso2.carbon.inbound.endpoint"
+    version: "4.7.175"
+  
+  - groupId: "org.apache.axis2"
+    artifactId: "axis2-kernel"
+    version: "1.7.9-wso2v16"
+  
+  - groupId: "org.apache.ws.commons.axiom"
+    artifactId: "axiom-api"
+    version: "1.2.22-wso2v7"
+
+repositories:
+  - id: "central"
+    url: "https://repo.maven.apache.org/maven2/"
+  
+  - id: "wso2-nexus"
+    url: "https://maven.wso2.org/nexus/content/groups/wso2-public/"
+  
+  - id: "wso2-maven2-repository"
+    url: "scp://dist.wso2.org/home/httpd/dist.wso2.org/maven2/"
+
+components:
+  - name: "mcpSseInbound"
+    class: "org.wso2.carbon.inbound.SSE.SSEMessageConsumer"
+    package: "org.wso2.carbon.inbound.SSE"
+    description: "SSE-based MCP inbound endpoint listener"

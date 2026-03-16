@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inboundEndpoint xmlns="http://ws.apache.org/ns/synapse"
+                 name="MCPSSEServerEndpoint"
+                 protocol="http"
+                 sequence="MCPSequence"
+                 suspend="false">
+    <parameters>
+        <parameter name="inbound.http.port">8765</parameter>
+        <parameter name="inbound.http.context.path">/mcp</parameter>
+        <parameter name="inbound.http.method">POST</parameter>
+        <parameter name="dispatch">false</parameter>
+        <parameter name="mcp.tools.localentry">mcpSseEntry</parameter>
+    </parameters>
+</inboundEndpoint>
