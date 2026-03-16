@@ -24,7 +24,7 @@ import org.apache.synapse.core.SynapseEnvironment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Handles MCP JSON-RPC 2.0 requests received on {@code POST /mcp}.
@@ -54,8 +54,10 @@ public class McpProtocolHandler {
 
     private final String serverName;
     private final String serverVersion;
+    @SuppressWarnings("unused")
     private final String toolKeys;
     private final SynapseEnvironment synapseEnvironment;
+    @SuppressWarnings("unused")
     private final int mainHttpPort;
 
     public McpProtocolHandler(String serverName, String serverVersion, String toolKeys,
@@ -108,12 +110,7 @@ public class McpProtocolHandler {
                 // Notification — no response (204 No Content)
                 return new HandleResult(null, null);
             case McpConstants.METHOD_TOOLS_LIST:
-                // TODO: Need to implement this
-                JSONObject dummyResult = new JSONObject();
-                JSONArray dummyToolsArray = new JSONArray();
-                dummyToolsArray.put(toolKeys);
-                dummyResult.put("tools", dummyToolsArray);
-                return new HandleResult(successResponse(id, dummyResult), null);
+                return new HandleResult(successResponse(id, handleToolsList()), null);
             case McpConstants.METHOD_TOOLS_CALL:
                 return new HandleResult(handleToolsCall(id, params), null);
             case McpConstants.METHOD_PING:
@@ -140,6 +137,57 @@ public class McpProtocolHandler {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    private JSONObject handleToolsList() {
+        JSONObject result = new JSONObject();
+        JSONArray toolsArray = new JSONArray();
+
+        SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
+        Map<String, Map<String, Object>> toolsMap = getMcpToolsMap(synapseConfig);
+
+        if (toolsMap != null && !toolsMap.isEmpty()) {
+            for (Map.Entry<String, Map<String, Object>> entry : toolsMap.entrySet()) {
+                String toolName = entry.getKey();
+                Map<String, Object> toolDetails = entry.getValue();
+
+                JSONObject tool = new JSONObject();
+                tool.put("name", toolName);
+                tool.put("description", toolDetails.getOrDefault("description", ""));
+
+                // Extract inputSchema from tool details; handle both Map and JSONObject
+                Object inputSchemaObj = toolDetails.get("inputSchema");
+                if (inputSchemaObj != null) {
+                    if (inputSchemaObj instanceof Map) {
+                        tool.put("inputSchema", new JSONObject((Map<String, Object>) inputSchemaObj));
+                    } else if (inputSchemaObj instanceof JSONObject) {
+                        tool.put("inputSchema", inputSchemaObj);
+                    } else {
+                        tool.put("inputSchema", new JSONObject());
+                    }
+                } else {
+                    tool.put("inputSchema", new JSONObject());
+                }
+
+                toolsArray.put(tool);
+            }
+        }
+
+        result.put("tools", toolsArray);
+        return result;
+    }
+
+    private Map<String, Map<String, Object>> getMcpToolsMap(SynapseConfiguration synapseConfig) {
+        if (synapseConfig == null) {
+            return null;
+        }
+        try {
+            return synapseConfig.getMcpToolsMap();
+        } catch (Exception e) {
+            log.warn("Could not access mcpToolsMap from SynapseConfiguration: " + e.getMessage());
+            return null;
+        }
+    }
+
     private JSONObject handleToolsCall(Object id, JSONObject params) {
         String toolName = params.optString("name", null);
         if (toolName == null || toolName.trim().isEmpty()) {
@@ -150,8 +198,6 @@ public class McpProtocolHandler {
         if (arguments == null) {
             arguments = new JSONObject();
         }
-
-        SynapseConfiguration config = synapseEnvironment.getSynapseConfiguration();
 
         try {
             String resultText = executeTool(arguments);
