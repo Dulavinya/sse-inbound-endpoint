@@ -154,10 +154,23 @@ public class McpProtocolHandler {
                 tool.put("name", toolName);
                 tool.put("description", toolDetails.getOrDefault("description", ""));
 
-                // Extract inputSchema from tool details; handle both Map and JSONObject
+                // Extract inputSchema from tool details; handle Map, JSONObject, and String
                 Object inputSchemaObj = toolDetails.get("inputSchema");
                 if (inputSchemaObj != null) {
-                    if (inputSchemaObj instanceof Map) {
+                    if (inputSchemaObj instanceof String) {
+                        // Parse JSON string to JSONObject
+                        try {
+                            String schemaStr = ((String) inputSchemaObj).trim();
+                            if (schemaStr.startsWith("{") || schemaStr.startsWith("[")) {
+                                tool.put("inputSchema", new JSONObject(schemaStr));
+                            } else {
+                                tool.put("inputSchema", new JSONObject());
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to parse inputSchema string: " + e.getMessage());
+                            tool.put("inputSchema", new JSONObject());
+                        }
+                    } else if (inputSchemaObj instanceof Map) {
                         tool.put("inputSchema", new JSONObject((Map<String, Object>) inputSchemaObj));
                     } else if (inputSchemaObj instanceof JSONObject) {
                         tool.put("inputSchema", inputSchemaObj);
