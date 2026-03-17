@@ -137,7 +137,7 @@ public class McpProtocolHandler {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
+    
     private JSONObject handleToolsList() {
         JSONObject result = new JSONObject();
         JSONArray toolsArray = new JSONArray();
@@ -201,6 +201,7 @@ public class McpProtocolHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private JSONObject handleToolsCall(Object id, JSONObject params) {
         String toolName = params.optString("name", null);
         if (toolName == null || toolName.trim().isEmpty()) {
@@ -212,8 +213,17 @@ public class McpProtocolHandler {
             arguments = new JSONObject();
         }
 
+        // Lookup tool definition from SynapseConfiguration
+        SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
+        Map<String, Map<String, Object>> toolsMap = getMcpToolsMap(synapseConfig);
+        if (toolsMap == null || !toolsMap.containsKey(toolName)) {
+            return errorResponse(id, McpConstants.ERROR_INVALID_PARAMS, "Tool not found: " + toolName);
+        }
+
+        Map<String, Object> toolDefinition = toolsMap.get(toolName);
+
         try {
-            String resultText = executeTool(arguments);
+            String resultText = executeTool(toolName, toolDefinition, arguments);
             return successResponse(id, buildCallResult(resultText, false));
         } catch (McpToolExecutionException e) {
             log.error("MCP tool '" + toolName + "' execution failed", e);
@@ -221,9 +231,11 @@ public class McpProtocolHandler {
         }
     }
 
-    private String executeTool(JSONObject args) throws McpToolExecutionException {
-        ApiToolExecutor executor = new ApiToolExecutor();
-        return executor.execute(args);
+    private String executeTool(String toolName, Map<String, Object> toolDefinition, JSONObject args)
+            throws McpToolExecutionException {
+        SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
+        ApiToolExecutor executor = new ApiToolExecutor(mainHttpPort, synapseConfig);
+        return executor.execute(toolDefinition, args);
     }
 
     private JSONObject buildCallResult(String text, boolean isError) {
