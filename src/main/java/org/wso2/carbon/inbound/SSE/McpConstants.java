@@ -21,6 +21,7 @@ public class McpConstants {
     // Inbound endpoint parameter keys
     public static final String PARAM_PORT = "inbound.mcp.port";
     public static final String PARAM_TOOLS = "mcp.tools";
+    public static final String PARAM_TOOLS_LOCALENTRY = "mcp.tools.localentry";
     public static final String PARAM_SERVER_NAME = "mcp.server.name";
     public static final String PARAM_SERVER_VERSION = "mcp.server.version";
 

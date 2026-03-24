@@ -43,17 +43,16 @@ public class McpProtocolHandler {
 
     private final String serverName;
     private final String serverVersion;
-    @SuppressWarnings("unused")
-    private final String toolKeys;
+    private final String localEntryName;
     private final SynapseEnvironment synapseEnvironment;
     @SuppressWarnings("unused")
     private final int mainHttpPort;
 
-    public McpProtocolHandler(String serverName, String serverVersion, String toolKeys,
+    public McpProtocolHandler(String serverName, String serverVersion, String localEntryName,
                               SynapseEnvironment synapseEnvironment, int mainHttpPort) {
         this.serverName = serverName;
         this.serverVersion = serverVersion;
-        this.toolKeys = toolKeys;
+        this.localEntryName = localEntryName;
         this.synapseEnvironment = synapseEnvironment;
         this.mainHttpPort = mainHttpPort;
     }
@@ -128,9 +127,18 @@ public class McpProtocolHandler {
         SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
         Map<String, Map<String, Object>> toolsMap = getMcpToolsMap(synapseConfig);
 
+        String prefix = (localEntryName != null && !localEntryName.isEmpty())
+                ? localEntryName + ":" : null;
+
         if (toolsMap != null && !toolsMap.isEmpty()) {
             for (Map.Entry<String, Map<String, Object>> entry : toolsMap.entrySet()) {
-                String toolName = entry.getKey();
+                String key = entry.getKey();
+                // If a local entry filter is set, skip tools from other local entries
+                if (prefix != null && !key.startsWith(prefix)) {
+                    continue;
+                }
+                // Strip the "localentryname:" prefix so clients see only the tool name
+                String toolName = (prefix != null) ? key.substring(prefix.length()) : key;
                 Map<String, Object> toolDetails = entry.getValue();
 
                 JSONObject tool = new JSONObject();
@@ -196,14 +204,17 @@ public class McpProtocolHandler {
             arguments = new JSONObject();
         }
 
-        // Lookup tool definition from SynapseConfiguration
+        // Lookup tool definition from SynapseConfiguration.
+        // Map keys are stored as "localentryname:toolname"; resolve the full key.
         SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
         Map<String, Map<String, Object>> toolsMap = getMcpToolsMap(synapseConfig);
-        if (toolsMap == null || !toolsMap.containsKey(toolName)) {
+        String mapKey = (localEntryName != null && !localEntryName.isEmpty())
+                ? localEntryName + ":" + toolName : toolName;
+        if (toolsMap == null || !toolsMap.containsKey(mapKey)) {
             return errorResponse(id, McpConstants.ERROR_INVALID_PARAMS, "Tool not found: " + toolName);
         }
 
-        Map<String, Object> toolDefinition = toolsMap.get(toolName);
+        Map<String, Object> toolDefinition = toolsMap.get(mapKey);
 
         try {
             String resultText = executeTool(toolName, toolDefinition, arguments);

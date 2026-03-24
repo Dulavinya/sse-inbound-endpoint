@@ -74,12 +74,13 @@ public class McpInboundListener extends GenericInboundListener {
                 McpConstants.DEFAULT_SERVER_NAME);
         String serverVersion = props.getProperty(McpConstants.PARAM_SERVER_VERSION,
                 McpConstants.DEFAULT_SERVER_VERSION);
-        String toolKeys = props.getProperty(McpConstants.PARAM_TOOLS, "");
+        String localEntryName = props.getProperty(McpConstants.PARAM_TOOLS_LOCALENTRY,
+                props.getProperty(McpConstants.PARAM_TOOLS, ""));
 
         SynapseEnvironment synapseEnvironment = params.getSynapseEnvironment();
         int mainHttpPort = resolveMainHttpPort(synapseEnvironment);
 
-        this.protocolHandler = new McpProtocolHandler(serverName, serverVersion, toolKeys,
+        this.protocolHandler = new McpProtocolHandler(serverName, serverVersion, localEntryName,
                 synapseEnvironment, mainHttpPort);
     }
 
