@@ -15,6 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.wso2.carbon.inbound.SSE;
 
 import org.apache.commons.logging.Log;
@@ -33,19 +34,6 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-/**
- * Worker for {@code GET /mcp} — establishes a long-lived SSE stream for server-to-client
- * notifications as per the MCP Streamable HTTP transport spec.
- *
- * <p>This worker holds a thread from the inbound endpoint's worker pool for the duration
- * of the SSE connection. It sends a keepalive comment every
- * {@link McpConstants#SSE_KEEPALIVE_INTERVAL_MS} milliseconds to prevent the
- * PassThrough transport's socket timeout from firing.
- *
- * <p>The session is registered in {@link McpSseSessionRegistry} so that other components
- * (e.g., a future tool progress notifier) can push events to connected clients.
- */
 public class McpSseWorker implements Runnable {
 
     private static final Log log = LogFactory.getLog(McpSseWorker.class);
@@ -68,18 +56,10 @@ public class McpSseWorker implements Runnable {
         return sessionId;
     }
 
-    /**
-     * Enqueues an SSE event to be sent to this client. Thread-safe.
-     *
-     * @param eventData the {@code data:} field value (single line, no newlines)
-     */
     public void sendEvent(String eventData) {
         eventQueue.offer("data: " + eventData + "\n\n");
     }
 
-    /**
-     * Enqueues a named SSE event. Thread-safe.
-     */
     public void sendEvent(String eventName, String eventData) {
         eventQueue.offer("event: " + eventName + "\ndata: " + eventData + "\n\n");
     }
@@ -111,8 +91,12 @@ public class McpSseWorker implements Runnable {
         log.info("MCP SSE session opened: " + sessionId);
 
         try (OutputStream out = pipe.getOutputStream()) {
-            // Per MCP Streamable HTTP spec (2024-11-05), GET /mcp is a notification channel.
-            // No initial event is sent — the connection is held open and keepalives are used.
+            String host = getHeader("Host");
+            String endpointUrl = (host != null)
+                    ? "http://" + host + McpConstants.PATH_MCP + "?sessionId=" + sessionId
+                    : McpConstants.PATH_MCP + "?sessionId=" + sessionId;
+            writeRaw(out, "event: endpoint\ndata: " + endpointUrl + "\n\n");
+
             while (true) {
                 String event = eventQueue.poll(McpConstants.SSE_KEEPALIVE_INTERVAL_MS,
                         TimeUnit.MILLISECONDS);

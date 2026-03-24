@@ -34,32 +34,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Properties;
-
-/**
- * Inbound request processor for the MCP (Model Context Protocol) server.
- *
- * <p>Starts an HTTP listener on the configured {@code inbound.mcp.port} using the existing
- * PassThrough NIO infrastructure (shared NIO reactor). The listener handles:
- * <ul>
- *   <li>{@code POST /mcp} — MCP JSON-RPC 2.0 requests (tool calls, initialize, etc.)</li>
- *   <li>{@code GET  /mcp} — SSE stream for server-to-client notifications</li>
- * </ul>
- *
- * <p>Tool definitions are read from Synapse local entries whose keys are listed in the
- * {@code mcp.tools} inbound endpoint parameter (comma-separated).
- *
- * <p>Example inbound endpoint XML:
- * <pre>{@code
- * <inboundEndpoint name="MyMCPServer"  suspend="false" class="org.wso2.carbon.inbound.endpoint.protocol.mcp.McpInboundListener">
- *     <parameters>
- *         <parameter name="inbound.mcp.port">7444</parameter>
- *         <parameter name="mcp.server.name">My Integration Server</parameter>
- *         <parameter name="mcp.server.version">1.0.0</parameter>
- *         <parameter name="mcp.tools">tool-getOrder,tool-searchProducts</parameter>
- *     </parameters>
- * </inboundEndpoint>
- * }</pre>
- */
 public class McpInboundListener extends GenericInboundListener {
 
     private static final Log log = LogFactory.getLog(McpInboundListener.class);
@@ -192,10 +166,6 @@ public class McpInboundListener extends GenericInboundListener {
         }
     }
 
-    /**
-     * Resolves the main Synapse HTTP port so the API tool executor can call Synapse APIs
-     * on localhost. Reads from the Axis2 transport configuration; falls back to 8290.
-     */
     private int resolveMainHttpPort(SynapseEnvironment synapseEnvironment) {
         try {
             org.apache.axis2.description.TransportInDescription httpTransport =

@@ -19,11 +19,6 @@ package org.wso2.carbon.inbound.SSE;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Singleton registry of active MCP SSE sessions.
- *
- * <p>Allows any component to push events to a specific connected SSE client by session ID.
- */
 public class McpSseSessionRegistry {
 
     private static final McpSseSessionRegistry INSTANCE = new McpSseSessionRegistry();

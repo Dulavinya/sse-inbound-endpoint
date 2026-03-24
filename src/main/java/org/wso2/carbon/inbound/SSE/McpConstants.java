@@ -16,10 +16,6 @@
  * under the License.
  */
 package org.wso2.carbon.inbound.SSE;
-
-/**
- * Constants for the MCP inbound endpoint protocol.
- */
 public class McpConstants {
 
     // Inbound endpoint parameter keys

@@ -25,19 +25,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Map;
-
-/**
- * Handles MCP JSON-RPC 2.0 requests received on {@code POST /mcp}.
- *
- * <p>Routes each request to the appropriate method handler and returns a
- * {@link HandleResult} containing the JSON-RPC 2.0 response and, for
- * {@code initialize}, the newly allocated session ID.
- */
 public class McpProtocolHandler {
 
-    /**
-     * Result of a {@link #handle} call.
-     */
     public static class HandleResult {
         /** JSON-RPC 2.0 response object; {@code null} for notifications (204). */
         public final JSONObject response;
@@ -68,13 +57,7 @@ public class McpProtocolHandler {
         this.synapseEnvironment = synapseEnvironment;
         this.mainHttpPort = mainHttpPort;
     }
-
-    /**
-     * Processes a raw JSON-RPC 2.0 request body and returns a {@link HandleResult}.
-     *
-     * @param requestBody raw JSON string from the HTTP body
-     * @return result containing the response JSON (null for notifications) and an optional new session ID
-     */
+    
     public HandleResult handle(String requestBody) {
         JSONObject request;
         try {

@@ -35,19 +35,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-/**
- * NIO event handler for the MCP inbound endpoint port.
- *
- * <p>Extends {@link SourceHandler} to reuse the PassThrough NIO infrastructure.
- * On each incoming request, routes to:
- * <ul>
- *   <li>{@link McpRpcWorker} for {@code POST /mcp} (JSON-RPC)</li>
- *   <li>{@link McpSseWorker} for {@code GET /mcp} (SSE stream)</li>
- *   <li>Inline handler for {@code OPTIONS /mcp} (CORS preflight — 204)</li>
- *   <li>Inline handler for {@code DELETE /mcp} (session termination — 200)</li>
- * </ul>
- * CORS headers are added to every response.
- */
 public class McpSourceHandler extends SourceHandler {
 
     private static final Log log = LogFactory.getLog(McpSourceHandler.class);
@@ -114,11 +101,7 @@ public class McpSourceHandler extends SourceHandler {
         }
     }
 
-    // ---- request handlers ---------------------------------------------------
-
-    /**
-     * Responds to CORS preflight ({@code OPTIONS /mcp}) with 204 and full CORS headers.
-     */
+    // request handlers 
     private void sendOptions(SourceRequest request) {
         try {
             SourceResponse resp = new SourceResponse(sourceConfiguration, 204, request);
@@ -131,10 +114,6 @@ public class McpSourceHandler extends SourceHandler {
         }
     }
 
-    /**
-     * Handles {@code DELETE /mcp} — terminates the session identified by the
-     * {@code Mcp-Session-Id} request header.
-     */
     private void handleDelete(SourceRequest request) {
         String sessionId = getHeader(request, McpConstants.HEADER_MCP_SESSION_ID);
         if (sessionId != null) {
@@ -144,7 +123,7 @@ public class McpSourceHandler extends SourceHandler {
         sendSimpleResponse(request, 200, "");
     }
 
-    // ---- response helpers ---------------------------------------------------
+    //response helpers 
 
     private void addCorsHeaders(SourceResponse resp) {
         resp.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, McpConstants.CORS_ALLOW_ORIGIN_VALUE);
@@ -177,7 +156,7 @@ public class McpSourceHandler extends SourceHandler {
         }
     }
 
-    // ---- utilities ----------------------------------------------------------
+    // utilities 
 
     private WorkerPool getWorkerPool() {
         if (workerPool == null) {

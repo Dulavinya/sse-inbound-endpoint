@@ -16,10 +16,6 @@
  * under the License.
  */
 package org.wso2.carbon.inbound.SSE;
-
-/**
- * Thrown when an MCP tool execution fails.
- */
 public class McpToolExecutionException extends Exception {
 
     public McpToolExecutionException(String message) {

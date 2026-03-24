@@ -20,15 +20,6 @@ package org.wso2.carbon.inbound.SSE;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * Singleton registry tracking active MCP sessions.
- *
- * <p>A session is created when the client sends an {@code initialize} request.
- * The assigned {@code Mcp-Session-Id} must be included in all subsequent requests.
- * Sessions are removed when the client sends {@code DELETE /mcp} or the server
- * restarts.
- */
 public class McpSessionRegistry {
 
     private static final McpSessionRegistry INSTANCE = new McpSessionRegistry();
@@ -41,25 +32,16 @@ public class McpSessionRegistry {
         return INSTANCE;
     }
 
-    /**
-     * Creates a new session and returns its ID.
-     */
     public String createSession() {
         String id = UUID.randomUUID().toString();
         sessions.add(id);
         return id;
     }
 
-    /**
-     * Returns {@code true} if the given session ID refers to an active session.
-     */
     public boolean isValid(String sessionId) {
         return sessionId != null && sessions.contains(sessionId);
     }
 
-    /**
-     * Removes a session (called on {@code DELETE /mcp}).
-     */
     public void remove(String sessionId) {
         if (sessionId != null) {
             sessions.remove(sessionId);
