@@ -78,7 +78,8 @@ public class ApiToolExecutor {
         String body = null;
 
         if ("GET".equalsIgnoreCase(method)) {
-            String query = buildQueryString(arguments);
+            java.util.Set<String> pathParams = new java.util.HashSet<>(extractPathParamNames(resource));
+            String query = buildQueryString(arguments, pathParams);
             if (query != null && !query.isEmpty()) {
                 url = url + "?" + query;
             }
@@ -129,12 +130,15 @@ public class ApiToolExecutor {
         return result;
     }
 
-    private String buildQueryString(JSONObject arguments) {
+    private String buildQueryString(JSONObject arguments, java.util.Set<String> exclude) {
         StringBuilder sb = new StringBuilder();
         Iterator<String> keys = arguments.keys();
         boolean first = true;
         while (keys.hasNext()) {
             String key = keys.next();
+            if (exclude != null && exclude.contains(key)) {
+                continue;
+            }
             Object value = arguments.opt(key);
             if (value != null) {
                 if (!first) {

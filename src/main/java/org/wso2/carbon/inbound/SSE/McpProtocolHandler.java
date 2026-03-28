@@ -192,7 +192,6 @@ public class McpProtocolHandler {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private JSONObject handleToolsCall(Object id, JSONObject params) {
         String toolName = params.optString("name", null);
         if (toolName == null || toolName.trim().isEmpty()) {
@@ -203,9 +202,6 @@ public class McpProtocolHandler {
         if (arguments == null) {
             arguments = new JSONObject();
         }
-
-        // Lookup tool definition from SynapseConfiguration.
-        // Map keys are stored as "localentryname:toolname"; resolve the full key.
         SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
         Map<String, Map<String, Object>> toolsMap = getMcpToolsMap(synapseConfig);
         String mapKey = (localEntryName != null && !localEntryName.isEmpty())
