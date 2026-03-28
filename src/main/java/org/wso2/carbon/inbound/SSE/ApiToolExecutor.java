@@ -124,7 +124,12 @@ public class ApiToolExecutor {
             Object value = arguments.opt(key);
             if (value != null) {
                 String placeholder = "{" + key + "}";
-                result = result.replace(placeholder, value.toString());
+                try {
+                    result = result.replace(placeholder, URLEncoder.encode(value.toString(), "UTF-8"));
+                } catch (Exception e) {
+                    log.warn("Failed to encode path parameter " + key + "; using raw value", e);
+                    result = result.replace(placeholder, value.toString());
+                }
             }
         }
         return result;
