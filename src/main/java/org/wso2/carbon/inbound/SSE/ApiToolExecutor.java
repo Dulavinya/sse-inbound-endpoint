@@ -62,23 +62,7 @@ public class ApiToolExecutor {
         
         String apiContext = resolveApiContext(toolDefinition);
 
-        String path;
-        JSONObject bodyJson = new JSONObject(arguments.toString());
-        java.util.Map<String, String> pathParamValues = new java.util.HashMap<>();
-        
-        if ("GET".equalsIgnoreCase(method)) {
-            path = substitutePathParameters(resource, arguments);
-        } else {
-            path = resource;
-            for (String param : extractPathParamNames(resource)) {
-                if (arguments.has(param)) {
-                    Object v = arguments.opt(param);
-                    if (v != null) {
-                        pathParamValues.put(param, v.toString());
-                    }
-                }
-            }
-        }
+        String path = substitutePathParameters(resource, arguments);
         if (apiContext != null && !apiContext.isEmpty() && !apiContext.equals("/")) {
             if (!apiContext.startsWith("/")) {
                 apiContext = "/" + apiContext;
@@ -92,39 +76,31 @@ public class ApiToolExecutor {
 
         String url = "http://localhost:" + port + path;
         String body = null;
-        String query = null;
 
         if ("GET".equalsIgnoreCase(method)) {
-            query = buildQueryString(arguments);
+            String query = buildQueryString(arguments);
             if (query != null && !query.isEmpty()) {
                 url = url + "?" + query;
             }
         } else {
-            body = arguments.toString();
+            if (arguments.has("payload")) {
+                Object payloadVal = arguments.opt("payload");
+                body = (payloadVal != null) ? payloadVal.toString() : null;
+            } else {
+                java.util.Set<String> pathParams = new java.util.HashSet<>(extractPathParamNames(resource));
+                JSONObject bodyOnly = new JSONObject(arguments.toString());
+                for (String param : pathParams) {
+                    bodyOnly.remove(param);
+                }
+                body = bodyOnly.toString();
+            }
         }
 
         if (log.isDebugEnabled()) {
             log.debug("Executing tool: " + method + " " + url + (body != null ? " with body: " + body : ""));
         }
 
-        try {
-            return sendHttpRequest(method, url, body, pathParamValues);
-        } catch (McpToolExecutionException e) {
-
-            String msg = e.getMessage() != null ? e.getMessage() : "";
-            boolean looksLikeUriVarError = msg.contains("HTTP 5") || msg.contains("UnresolvableException") || msg.contains("Variable ");
-            if (looksLikeUriVarError && bodyJson.length() >= 0) {
-                String originalBody = arguments != null ? arguments.toString() : "";
-                try {
-                    log.warn("Initial API call failed (likely URI variable issue); retrying with original body including path params. Error was: " + msg);
-                    return sendHttpRequest(method, url, originalBody, pathParamValues);
-                } catch (McpToolExecutionException ex2) {
-                    log.error("Retry with original body also failed", ex2);
-                    throw e;
-                }
-            }
-            throw e;
-        }
+        return sendHttpRequest(method, url, body);
     }
 
     private java.util.List<String> extractPathParamNames(String resource) {
@@ -176,7 +152,7 @@ public class ApiToolExecutor {
         return sb.toString();
     }
 
-    private String sendHttpRequest(String method, String urlStr, String body, java.util.Map<String, String> pathParamValues)
+    private String sendHttpRequest(String method, String urlStr, String body)
             throws McpToolExecutionException {
         try {
             URL url = new URL(urlStr);
@@ -186,19 +162,6 @@ public class ApiToolExecutor {
             conn.setReadTimeout(READ_TIMEOUT);
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Accept", "application/json");
-
-            if (pathParamValues != null && !pathParamValues.isEmpty()) {
-                for (java.util.Map.Entry<String, String> e : pathParamValues.entrySet()) {
-                    String k = e.getKey();
-                    String v = e.getValue();
-                    try {
-                        conn.setRequestProperty("uri.var." + k, v);
-                        conn.setRequestProperty("uri." + k, v);
-                        conn.setRequestProperty("X-URI-VAR-" + k, v);
-                    } catch (Exception ex) {
-                    }
-                }
-            }
 
             if (body != null && !body.isEmpty()) {
                 conn.setDoOutput(true);
