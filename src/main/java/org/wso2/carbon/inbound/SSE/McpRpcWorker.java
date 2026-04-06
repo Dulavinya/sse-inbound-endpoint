@@ -69,23 +69,20 @@ public class McpRpcWorker implements Runnable {
                 if (result.response != null) {
                     McpSseWorker sseWorker = McpSseSessionRegistry.getInstance().getSession(sseSessionId);
                     if (sseWorker != null) {
+                        log.debug("McpRpcWorker: Sending response to SSE session [" + sseSessionId + "]");
                         sseWorker.sendEvent("message", result.response.toString());
+                        log.debug("McpRpcWorker: Response sent to SSE session [" + sseSessionId + "] successfully");
                     } else {
                         log.warn("McpRpcWorker: SSE session not found: " + sseSessionId);
                     }
+                } else {
+                    log.debug("McpRpcWorker: No response to send for SSE session [" + sseSessionId + "] (notification)");
                 }
                 sendAcceptedResponse(result.newSessionId);
             } else {
-                String accept = getHeader(McpConstants.HEADER_ACCEPT);
-                boolean wantsSse = accept != null
-                        && accept.contains(McpConstants.CONTENT_TYPE_SSE)
-                        && !accept.contains(McpConstants.CONTENT_TYPE_JSON);
-
                 if (result.response == null) {
                     // notifications/initialized — 204 No Content
                     sendNoContentResponse(result.newSessionId);
-                } else if (wantsSse) {
-                    sendSseResponse(result.response, result.newSessionId);
                 } else {
                     byte[] responseBytes = result.response.toString().getBytes(StandardCharsets.UTF_8);
                     sendJsonResponse(200, responseBytes, result.newSessionId);

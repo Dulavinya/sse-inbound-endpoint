@@ -166,7 +166,12 @@ public class ApiToolExecutor {
         try {
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(method);
+            if ("PATCH".equalsIgnoreCase(method)) {
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("X-HTTP-Method-Override", "PATCH");
+            } else {
+                conn.setRequestMethod(method);
+            }
             conn.setConnectTimeout(CONNECT_TIMEOUT);
             conn.setReadTimeout(READ_TIMEOUT);
             conn.setRequestProperty("Content-Type", "application/json");

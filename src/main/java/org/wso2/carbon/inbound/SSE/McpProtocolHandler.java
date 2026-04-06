@@ -45,7 +45,6 @@ public class McpProtocolHandler {
     private final String serverVersion;
     private final String localEntryName;
     private final SynapseEnvironment synapseEnvironment;
-    @SuppressWarnings("unused")
     private final int mainHttpPort;
 
     public McpProtocolHandler(String serverName, String serverVersion, String localEntryName,
