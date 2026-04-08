@@ -222,6 +222,12 @@ public class McpProtocolHandler {
 
     private String executeTool(String toolName, Map<String, Object> toolDefinition, JSONObject args)
             throws McpToolExecutionException {
+        Object seqObj = toolDefinition.get("sequence");
+        if (seqObj != null && !seqObj.toString().trim().isEmpty()) {
+            SequenceToolExecutor executor = new SequenceToolExecutor(
+                    synapseEnvironment, seqObj.toString().trim());
+            return executor.execute(toolName, args, toolDefinition);
+        }
         SynapseConfiguration synapseConfig = synapseEnvironment.getSynapseConfiguration();
         ApiToolExecutor executor = new ApiToolExecutor(mainHttpPort, synapseConfig);
         return executor.execute(toolDefinition, args);
