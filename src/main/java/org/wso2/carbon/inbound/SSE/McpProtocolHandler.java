@@ -66,9 +66,9 @@ public class McpProtocolHandler {
         }
 
         Object id = request.opt(McpConstants.ID);
-        String method = request.optString(McpConstants.METHOD, null);
+        String rpcMethod = request.optString(McpConstants.METHOD, null);
 
-        if (method == null) {
+        if (rpcMethod == null) {
             return new HandleResult(errorResponse(id, McpConstants.ERROR_METHOD_NOT_FOUND,
                     "Missing 'method' field"), null);
         }
@@ -79,10 +79,10 @@ public class McpProtocolHandler {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("MCP request: method=" + method + " id=" + id);
+            log.debug("MCP request: method=" + rpcMethod + " id=" + id);
         }
 
-        switch (method) {
+        switch (rpcMethod) {
             case McpConstants.METHOD_INITIALIZE: {
                 String newSessionId = McpSessionRegistry.getInstance().createSession();
                 return new HandleResult(successResponse(id, handleInitialize()), newSessionId);
@@ -98,7 +98,7 @@ public class McpProtocolHandler {
                 return new HandleResult(successResponse(id, new JSONObject()), null);
             default:
                 return new HandleResult(errorResponse(id, McpConstants.ERROR_METHOD_NOT_FOUND,
-                        "Method not found: " + method), null);
+                        "Method not found: " + rpcMethod), null);
         }
     }
 
