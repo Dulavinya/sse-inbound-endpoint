@@ -60,7 +60,7 @@ public class McpConstants {
     public static final String HEADER_CORS_ALLOW_HEADERS = "Access-Control-Allow-Headers";
     public static final String HEADER_CORS_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
     public static final String CORS_ALLOW_ORIGIN_VALUE = "*";
-    public static final String CORS_ALLOW_METHODS_VALUE = "GET, POST, DELETE, OPTIONS";
+    public static final String CORS_ALLOW_METHODS_VALUE = "GET, POST, OPTIONS";
     public static final String CORS_ALLOW_HEADERS_VALUE = "Content-Type, Mcp-Session-Id";
     public static final String CORS_EXPOSE_HEADERS_VALUE = "Mcp-Session-Id";
 

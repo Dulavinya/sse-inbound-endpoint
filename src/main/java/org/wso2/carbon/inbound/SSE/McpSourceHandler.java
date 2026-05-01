@@ -20,7 +20,6 @@ package org.wso2.carbon.inbound.SSE;
 import org.apache.axis2.transport.base.threads.WorkerPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.nio.NHttpServerConnection;
 import org.apache.synapse.transport.passthru.Pipe;
@@ -80,11 +79,8 @@ public class McpSourceHandler extends SourceHandler {
                 case McpConstants.HTTP_POST:
                     getWorkerPool().execute(new McpRpcWorker(request, sourceConfiguration, protocolHandler));
                     break;
-                case "DELETE":
-                    handleDelete(request);
-                    break;
                 default:
-                    sendSimpleResponse(request, 405, "Method Not Allowed: use GET, POST, DELETE, or OPTIONS");
+                    sendSimpleResponse(request, 405, "Method Not Allowed: use GET, POST, or OPTIONS");
                     break;
             }
 
@@ -112,15 +108,6 @@ public class McpSourceHandler extends SourceHandler {
         } catch (Exception e) {
             log.error("Failed to send MCP OPTIONS response", e);
         }
-    }
-
-    private void handleDelete(SourceRequest request) {
-        String sessionId = getHeader(request, McpConstants.HEADER_MCP_SESSION_ID);
-        if (sessionId != null) {
-            McpSessionRegistry.getInstance().remove(sessionId);
-            log.info("MCP session terminated: " + sessionId);
-        }
-        sendSimpleResponse(request, 200, "");
     }
 
     //response helpers 
@@ -169,11 +156,4 @@ public class McpSourceHandler extends SourceHandler {
         return workerPool;
     }
 
-    private String getHeader(SourceRequest request, String headerName) {
-        if (request.getRequest() == null) {
-            return null;
-        }
-        Header h = request.getRequest().getFirstHeader(headerName);
-        return h != null ? h.getValue() : null;
-    }
 }
