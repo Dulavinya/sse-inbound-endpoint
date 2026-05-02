@@ -56,12 +56,7 @@ public class McpRpcWorker implements Runnable {
             String method = extractMethod(requestBody);
             if (!McpConstants.METHOD_INITIALIZE.equals(method)) {
                 String incomingSessionId = getHeader(McpConstants.HEADER_MCP_SESSION_ID);
-                if (incomingSessionId == null) {
-                    sendJsonError(400, McpConstants.ERROR_INVALID_REQUEST,
-                            "Missing Mcp-Session-Id header: call initialize first");
-                    return;
-                }
-                if (!McpSessionRegistry.getInstance().isValid(incomingSessionId)) {
+                if (incomingSessionId != null && !McpSessionRegistry.getInstance().isValid(incomingSessionId)) {
                     sendJsonError(404, McpConstants.ERROR_INTERNAL, "Session not found or expired");
                     return;
                 }
@@ -78,15 +73,15 @@ public class McpRpcWorker implements Runnable {
             }
 
             // SSE transport — push response to the SSE stream and return 202 Accepted.
+            McpSseWorker sseWorker = McpSseSessionRegistry.getInstance().getSession(sseSessionId);
+            if (sseWorker == null) {
+                sendJsonError(404, McpConstants.ERROR_INTERNAL, "SSE session not found: " + sseSessionId);
+                return;
+            }
             if (result.response != null) {
-                McpSseWorker sseWorker = McpSseSessionRegistry.getInstance().getSession(sseSessionId);
-                if (sseWorker != null) {
-                    log.debug("McpRpcWorker: Sending response to SSE session [" + sseSessionId + "]");
-                    sseWorker.sendEvent("message", result.response.toString());
-                    log.debug("McpRpcWorker: Response sent to SSE session [" + sseSessionId + "] successfully");
-                } else {
-                    log.warn("McpRpcWorker: SSE session not found: " + sseSessionId);
-                }
+                log.debug("McpRpcWorker: Sending response to SSE session [" + sseSessionId + "]");
+                sseWorker.sendEvent("message", result.response.toString());
+                log.debug("McpRpcWorker: Response sent to SSE session [" + sseSessionId + "] successfully");
             } else {
                 log.debug("McpRpcWorker: No response to send for SSE session [" + sseSessionId + "] (notification)");
             }
