@@ -42,6 +42,7 @@ public class McpInboundListener extends GenericInboundListener {
     private final int port;
     private final InboundProcessorParams processorParams;
     private final McpProtocolHandler protocolHandler;
+    private final CorsConfig corsConfig;
     private final boolean startInPausedMode;
 
     public McpInboundListener(InboundProcessorParams params) {
@@ -76,6 +77,39 @@ public class McpInboundListener extends GenericInboundListener {
                 McpConstants.DEFAULT_SERVER_VERSION);
         String localEntryName = props.getProperty(McpConstants.PARAM_TOOLS_LOCALENTRY,
                 props.getProperty(McpConstants.PARAM_TOOLS, ""));
+
+        // Load CORS configuration from properties
+        String corsAllowOrigin = props.getProperty(McpConstants.PARAM_CORS_ALLOW_ORIGIN,
+                McpConstants.DEFAULT_CORS_ALLOW_ORIGIN);
+        String corsAllowMethods = props.getProperty(McpConstants.PARAM_CORS_ALLOW_METHODS,
+                McpConstants.DEFAULT_CORS_ALLOW_METHODS);
+        String corsAllowHeaders = props.getProperty(McpConstants.PARAM_CORS_ALLOW_HEADERS,
+                McpConstants.DEFAULT_CORS_ALLOW_HEADERS);
+        String corsExposeHeaders = props.getProperty(McpConstants.PARAM_CORS_EXPOSE_HEADERS,
+                McpConstants.DEFAULT_CORS_EXPOSE_HEADERS);
+
+        this.corsConfig = new CorsConfig(corsAllowOrigin, corsAllowMethods, corsAllowHeaders,
+                corsExposeHeaders);
+
+        // Log CORS configuration
+        log.info("MCP inbound endpoint [" + name + "] CORS configuration loaded:");
+        log.info("  - Allow-Origin: " + corsAllowOrigin);
+        log.info("  - Allow-Methods: " + corsAllowMethods);
+        log.info("  - Allow-Headers: " + corsAllowHeaders);
+        log.info("  - Expose-Headers: " + corsExposeHeaders);
+
+        // Load and log SSE configuration
+        long sseKeepaliveInterval = McpConstants.DEFAULT_SSE_KEEPALIVE_INTERVAL_MS;
+        String keepaliveParam = props.getProperty(McpConstants.PARAM_SSE_KEEPALIVE_INTERVAL, 
+                String.valueOf(McpConstants.DEFAULT_SSE_KEEPALIVE_INTERVAL_MS));
+        try {
+            sseKeepaliveInterval = Long.parseLong(keepaliveParam.trim());
+        } catch (NumberFormatException e) {
+            log.warn("Invalid SSE keepalive interval value '" + keepaliveParam + "', using default " 
+                    + McpConstants.DEFAULT_SSE_KEEPALIVE_INTERVAL_MS + "ms");
+        }
+        log.info("MCP inbound endpoint [" + name + "] SSE configuration loaded:");
+        log.info("  - Keepalive Interval: " + sseKeepaliveInterval + "ms");
 
         SynapseEnvironment synapseEnvironment = params.getSynapseEnvironment();
         int mainHttpPort = resolveMainHttpPort(synapseEnvironment);
@@ -153,7 +187,7 @@ public class McpInboundListener extends GenericInboundListener {
                     "PassThrough source configuration is not available — ensure the HTTP transport is started");
         }
 
-        McpSourceHandler mcpSourceHandler = new McpSourceHandler(sourceConfig, protocolHandler);
+        McpSourceHandler mcpSourceHandler = new McpSourceHandler(sourceConfig, protocolHandler, corsConfig);
 
         try {
             PassThroughInboundEndpointHandler.startEndpoint(

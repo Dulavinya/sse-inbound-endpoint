@@ -24,6 +24,20 @@ public class McpConstants {
     public static final String PARAM_TOOLS_LOCALENTRY = "mcp.tools.localentry";
     public static final String PARAM_SERVER_NAME = "mcp.server.name";
     public static final String PARAM_SERVER_VERSION = "mcp.server.version";
+    public static final String PARAM_CORS_ALLOW_ORIGIN = "inbound.cors.allow.origin";
+    public static final String PARAM_CORS_ALLOW_METHODS = "inbound.cors.allow.methods";
+    public static final String PARAM_CORS_ALLOW_HEADERS = "inbound.cors.allow.headers";
+    public static final String PARAM_CORS_EXPOSE_HEADERS = "inbound.cors.expose.headers";
+    public static final String PARAM_SSE_KEEPALIVE_INTERVAL = "inbound.sse.keepalive.interval";
+
+    // Default CORS values
+    public static final String DEFAULT_CORS_ALLOW_ORIGIN = "*";
+    public static final String DEFAULT_CORS_ALLOW_METHODS = "GET, POST, OPTIONS";
+    public static final String DEFAULT_CORS_ALLOW_HEADERS = "Content-Type, Mcp-Session-Id";
+    public static final String DEFAULT_CORS_EXPOSE_HEADERS = "Mcp-Session-Id";
+    
+    // Default SSE values
+    public static final long DEFAULT_SSE_KEEPALIVE_INTERVAL_MS = 30_000L;
 
     // MCP transport paths
     public static final String PATH_MCP = "/mcp";
@@ -59,10 +73,6 @@ public class McpConstants {
     public static final String HEADER_CORS_ALLOW_METHODS = "Access-Control-Allow-Methods";
     public static final String HEADER_CORS_ALLOW_HEADERS = "Access-Control-Allow-Headers";
     public static final String HEADER_CORS_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
-    public static final String CORS_ALLOW_ORIGIN_VALUE = "*";
-    public static final String CORS_ALLOW_METHODS_VALUE = "GET, POST, OPTIONS";
-    public static final String CORS_ALLOW_HEADERS_VALUE = "Content-Type, Mcp-Session-Id";
-    public static final String CORS_EXPOSE_HEADERS_VALUE = "Mcp-Session-Id";
 
     // Content types
     public static final String CONTENT_TYPE_JSON = "application/json";
@@ -70,7 +80,7 @@ public class McpConstants {
 
     // SSE
     public static final String SSE_KEEPALIVE_COMMENT = ": keepalive\n\n";
-    public static final long SSE_KEEPALIVE_INTERVAL_MS = 30_000L;
+    public static final long SSE_KEEPALIVE_INTERVAL_MS = DEFAULT_SSE_KEEPALIVE_INTERVAL_MS;
 
     // MCP message context properties
     public static final String MC_PROPERTY_TOOL_NAME = "mcp.tool.name";

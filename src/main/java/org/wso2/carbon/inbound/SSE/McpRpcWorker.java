@@ -37,12 +37,14 @@ public class McpRpcWorker implements Runnable {
     private final SourceRequest request;
     private final SourceConfiguration sourceConfiguration;
     private final McpProtocolHandler protocolHandler;
+    private final CorsConfig corsConfig;
 
     public McpRpcWorker(SourceRequest request, SourceConfiguration sourceConfiguration,
-                        McpProtocolHandler protocolHandler) {
+                        McpProtocolHandler protocolHandler, CorsConfig corsConfig) {
         this.request = request;
         this.sourceConfiguration = sourceConfiguration;
         this.protocolHandler = protocolHandler;
+        this.corsConfig = corsConfig;
     }
 
     @Override
@@ -157,8 +159,13 @@ public class McpRpcWorker implements Runnable {
     // response helpers 
 
     private void addCorsHeaders(SourceResponse resp) {
-        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, McpConstants.CORS_ALLOW_ORIGIN_VALUE);
-        resp.addHeader(McpConstants.HEADER_CORS_EXPOSE_HEADERS, McpConstants.CORS_EXPOSE_HEADERS_VALUE);
+        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, corsConfig.getAllowOrigin());
+        resp.addHeader(McpConstants.HEADER_CORS_EXPOSE_HEADERS, corsConfig.getExposeHeaders());
+        
+        if (log.isDebugEnabled()) {
+            log.debug("RPC response CORS headers set - Allow-Origin: " + corsConfig.getAllowOrigin()
+                    + ", Expose-Headers: " + corsConfig.getExposeHeaders());
+        }
     }
 
     private void sendAcceptedResponse(String sessionId) throws IOException {

@@ -40,13 +40,16 @@ public class McpSourceHandler extends SourceHandler {
 
     private final SourceConfiguration sourceConfiguration;
     private final McpProtocolHandler protocolHandler;
+    private final CorsConfig corsConfig;
     private WorkerPool workerPool;
 
     public McpSourceHandler(SourceConfiguration sourceConfiguration,
-                            McpProtocolHandler protocolHandler) {
+                            McpProtocolHandler protocolHandler,
+                            CorsConfig corsConfig) {
         super(sourceConfiguration);
         this.sourceConfiguration = sourceConfiguration;
         this.protocolHandler = protocolHandler;
+        this.corsConfig = corsConfig;
     }
 
     @Override
@@ -74,10 +77,10 @@ public class McpSourceHandler extends SourceHandler {
                     sendOptions(request);
                     break;
                 case McpConstants.HTTP_GET:
-                    getWorkerPool().execute(new McpSseWorker(request, sourceConfiguration));
+                    getWorkerPool().execute(new McpSseWorker(request, sourceConfiguration, corsConfig));
                     break;
                 case McpConstants.HTTP_POST:
-                    getWorkerPool().execute(new McpRpcWorker(request, sourceConfiguration, protocolHandler));
+                    getWorkerPool().execute(new McpRpcWorker(request, sourceConfiguration, protocolHandler, corsConfig));
                     break;
                 default:
                     sendSimpleResponse(request, 405, "Method Not Allowed: use GET, POST, or OPTIONS");
@@ -113,10 +116,18 @@ public class McpSourceHandler extends SourceHandler {
     //response helpers 
 
     private void addCorsHeaders(SourceResponse resp) {
-        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, McpConstants.CORS_ALLOW_ORIGIN_VALUE);
-        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_METHODS, McpConstants.CORS_ALLOW_METHODS_VALUE);
-        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_HEADERS, McpConstants.CORS_ALLOW_HEADERS_VALUE);
-        resp.addHeader(McpConstants.HEADER_CORS_EXPOSE_HEADERS, McpConstants.CORS_EXPOSE_HEADERS_VALUE);
+        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, corsConfig.getAllowOrigin());
+        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_METHODS, corsConfig.getAllowMethods());
+        resp.addHeader(McpConstants.HEADER_CORS_ALLOW_HEADERS, corsConfig.getAllowHeaders());
+        resp.addHeader(McpConstants.HEADER_CORS_EXPOSE_HEADERS, corsConfig.getExposeHeaders());
+        
+        if (log.isDebugEnabled()) {
+            log.debug("CORS headers added to response:");
+            log.debug("  - Allow-Origin: " + corsConfig.getAllowOrigin());
+            log.debug("  - Allow-Methods: " + corsConfig.getAllowMethods());
+            log.debug("  - Allow-Headers: " + corsConfig.getAllowHeaders());
+            log.debug("  - Expose-Headers: " + corsConfig.getExposeHeaders());
+        }
     }
 
     private void sendSimpleResponse(SourceRequest request, int statusCode, String body) {

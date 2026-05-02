@@ -43,12 +43,14 @@ public class McpSseWorker implements Runnable {
 
     private final SourceRequest request;
     private final SourceConfiguration sourceConfiguration;
+    private final CorsConfig corsConfig;
     private final String sessionId;
     private final BlockingQueue<String> eventQueue = new LinkedBlockingQueue<>();
 
-    public McpSseWorker(SourceRequest request, SourceConfiguration sourceConfiguration) {
+    public McpSseWorker(SourceRequest request, SourceConfiguration sourceConfiguration, CorsConfig corsConfig) {
         this.request = request;
         this.sourceConfiguration = sourceConfiguration;
+        this.corsConfig = corsConfig;
         this.sessionId = UUID.randomUUID().toString();
     }
 
@@ -70,8 +72,13 @@ public class McpSseWorker implements Runnable {
         sourceResponse.addHeader(McpConstants.HEADER_CONTENT_TYPE, McpConstants.CONTENT_TYPE_SSE);
         sourceResponse.addHeader(McpConstants.HEADER_CACHE_CONTROL, "no-cache");
         sourceResponse.addHeader(McpConstants.HEADER_CONNECTION, "keep-alive");
-        sourceResponse.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, McpConstants.CORS_ALLOW_ORIGIN_VALUE);
-        sourceResponse.addHeader(McpConstants.HEADER_CORS_EXPOSE_HEADERS, McpConstants.CORS_EXPOSE_HEADERS_VALUE);
+        sourceResponse.addHeader(McpConstants.HEADER_CORS_ALLOW_ORIGIN, corsConfig.getAllowOrigin());
+        sourceResponse.addHeader(McpConstants.HEADER_CORS_EXPOSE_HEADERS, corsConfig.getExposeHeaders());
+        
+        if (log.isDebugEnabled()) {
+            log.debug("SSE response CORS headers set - Allow-Origin: " + corsConfig.getAllowOrigin() 
+                    + ", Expose-Headers: " + corsConfig.getExposeHeaders());
+        }
 
         // Echo back the session ID the client opened this stream with, if present
         String mcpSessionId = getHeader(McpConstants.HEADER_MCP_SESSION_ID);
@@ -89,6 +96,11 @@ public class McpSseWorker implements Runnable {
 
         McpSseSessionRegistry.getInstance().register(sessionId, this);
         log.info("MCP SSE session opened: " + sessionId);
+        
+        if (log.isDebugEnabled()) {
+            log.debug("SSE session " + sessionId + " using keepalive interval: " 
+                    + McpConstants.SSE_KEEPALIVE_INTERVAL_MS + "ms");
+        }
 
         try (OutputStream out = pipe.getOutputStream()) {
             String host = getHeader("Host");
