@@ -100,6 +100,7 @@ public class McpConstants {
     public static final String ERROR_MESSAGE = "message";
 
     // JSON-RPC error codes
+    public static final int ERROR_INVALID_REQUEST = -32600;
     public static final int ERROR_METHOD_NOT_FOUND = -32601;
     public static final int ERROR_INVALID_PARAMS = -32602;
     public static final int ERROR_INTERNAL = -32603;

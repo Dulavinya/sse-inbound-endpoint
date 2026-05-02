@@ -66,30 +66,26 @@ public class McpRpcWorker implements Runnable {
 
             String sseSessionId = extractQueryParam("sessionId");
 
-            if (sseSessionId != null) {
-                // SSE transport — push response to the SSE stream and return 202 Accepted.
-                if (result.response != null) {
-                    McpSseWorker sseWorker = McpSseSessionRegistry.getInstance().getSession(sseSessionId);
-                    if (sseWorker != null) {
-                        log.debug("McpRpcWorker: Sending response to SSE session [" + sseSessionId + "]");
-                        sseWorker.sendEvent("message", result.response.toString());
-                        log.debug("McpRpcWorker: Response sent to SSE session [" + sseSessionId + "] successfully");
-                    } else {
-                        log.warn("McpRpcWorker: SSE session not found: " + sseSessionId);
-                    }
-                } else {
-                    log.debug("McpRpcWorker: No response to send for SSE session [" + sseSessionId + "] (notification)");
-                }
-                sendAcceptedResponse(result.newSessionId);
-            } else {
-                if (result.response == null) {
-                    // notifications/initialized — 204 No Content
-                    sendNoContentResponse(result.newSessionId);
-                } else {
-                    byte[] responseBytes = result.response.toString().getBytes(StandardCharsets.UTF_8);
-                    sendJsonResponse(200, responseBytes, result.newSessionId);
-                }
+            if (sseSessionId == null) {
+                sendJsonError(400, McpConstants.ERROR_INVALID_REQUEST,
+                        "Missing sessionId: open an SSE stream first via GET /mcp");
+                return;
             }
+
+            // SSE transport — push response to the SSE stream and return 202 Accepted.
+            if (result.response != null) {
+                McpSseWorker sseWorker = McpSseSessionRegistry.getInstance().getSession(sseSessionId);
+                if (sseWorker != null) {
+                    log.debug("McpRpcWorker: Sending response to SSE session [" + sseSessionId + "]");
+                    sseWorker.sendEvent("message", result.response.toString());
+                    log.debug("McpRpcWorker: Response sent to SSE session [" + sseSessionId + "] successfully");
+                } else {
+                    log.warn("McpRpcWorker: SSE session not found: " + sseSessionId);
+                }
+            } else {
+                log.debug("McpRpcWorker: No response to send for SSE session [" + sseSessionId + "] (notification)");
+            }
+            sendAcceptedResponse(result.newSessionId);
         } catch (Exception e) {
             log.error("McpRpcWorker failed", e);
             try {
