@@ -198,43 +198,6 @@ public class McpRpcWorker implements Runnable {
         pipe.setSerializationComplete(true);
     }
 
-    private void sendNoContentResponse(String sessionId) throws IOException {
-        SourceResponse sourceResponse = new SourceResponse(sourceConfiguration, 204, request);
-        addCorsHeaders(sourceResponse);
-        if (sessionId != null) {
-            sourceResponse.addHeader(McpConstants.HEADER_MCP_SESSION_ID, sessionId);
-        }
-        sourceResponse.connect(null);
-        SourceContext.setResponse(request.getConnection(), sourceResponse);
-        request.getConnection().requestOutput();
-    }
-
-    private void sendSseResponse(JSONObject responseJson, String sessionId) throws IOException {
-        String ssePayload = "event: message\ndata: " + responseJson.toString() + "\n\n";
-        byte[] body = ssePayload.getBytes(StandardCharsets.UTF_8);
-
-        SourceResponse sourceResponse = new SourceResponse(sourceConfiguration, 200, request);
-        sourceResponse.addHeader(McpConstants.HEADER_CONTENT_TYPE, McpConstants.CONTENT_TYPE_SSE);
-        sourceResponse.addHeader(McpConstants.HEADER_CACHE_CONTROL, "no-cache");
-        addCorsHeaders(sourceResponse);
-        if (sessionId != null) {
-            sourceResponse.addHeader(McpConstants.HEADER_MCP_SESSION_ID, sessionId);
-        }
-
-        Pipe pipe = new Pipe(sourceConfiguration.getBufferFactory().getBuffer(),
-                "MCP-SSE-RPC", sourceConfiguration);
-        pipe.attachConsumer(request.getConnection());
-        sourceResponse.connect(pipe);
-        SourceContext.setResponse(request.getConnection(), sourceResponse);
-        request.getConnection().requestOutput();
-
-        try (OutputStream out = pipe.getOutputStream()) {
-            out.write(body);
-            out.flush();
-        }
-        pipe.setSerializationComplete(true);
-    }
-
     private void sendJsonError(int statusCode, int errorCode, String message) throws IOException {
         JSONObject err = new JSONObject();
         err.put(McpConstants.ERROR_CODE, errorCode);
