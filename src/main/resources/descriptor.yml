@@ -30,6 +30,6 @@ repositories:
 
 components:
   - name: "mcpSseInbound"
-    class: "org.wso2.carbon.inbound.SSE.SSEMessageConsumer"
+    class: "org.wso2.carbon.inbound.SSE.McpInboundListener"
     package: "org.wso2.carbon.inbound.SSE"
     description: "SSE-based MCP inbound endpoint listener"
